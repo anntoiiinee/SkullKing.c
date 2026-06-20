@@ -16,7 +16,7 @@ const STORAGE_KEY = 'sk_background'
 
 export function useBackground() {
   const [bg, setBg] = useState<BgKey>(() =>
-    (localStorage.getItem(STORAGE_KEY) as BgKey) || 'waves'
+    (localStorage.getItem(STORAGE_KEY) as BgKey) || 'aurora'
   )
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, bg)
