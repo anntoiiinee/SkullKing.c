@@ -2,7 +2,8 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { SidebarLayout, SidebarInset, EasySidebar, SidebarTrigger } from '@btcv/ui/Sidebar'
 import { ThemeToggle } from '@btcv/ui/DarkMode'
 import { Skull, Home, Users, Gamepad2 } from 'lucide-react'
-import Waves from '@btcv/ui/backgrounds/Waves'
+import AnimatedBackground from './components/AnimatedBackground'
+import BackgroundPicker, { useBackground } from './components/BackgroundPicker'
 import Dashboard from './pages/Dashboard'
 import NewGame from './pages/NewGame'
 import GamePlay from './pages/GamePlay'
@@ -13,6 +14,7 @@ import PlayerDetail from './pages/PlayerDetail'
 function App() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [bg, setBg] = useBackground()
 
   const getActive = () => {
     if (location.pathname.startsWith('/games/new')) return 'new'
@@ -23,42 +25,34 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
-      <div className="fixed inset-0 z-0 pointer-events-none opacity-30">
-        <Waves
-          lineColor="var(--primary)"
-          backgroundColor="transparent"
-          waveSpeedX={0.02}
-          waveSpeedY={0.01}
-          waveAmpX={40}
-          waveAmpY={20}
-          xGap={12}
-          yGap={36}
-          friction={0.9}
-          tension={0.01}
-          maxCursorMove={120}
-        />
-      </div>
+      <AnimatedBackground bg={bg} />
       <div className="relative z-10">
-        <SidebarLayout>
+        <SidebarLayout navbarHeight={0}>
           <EasySidebar
+            navbarHeight={0}
             header={
               <div className="flex items-center gap-2 px-2">
                 <Skull className="w-5 h-5 text-primary" />
                 <span className="font-bold text-lg">SKULL <span className="text-primary">KING</span></span>
               </div>
             }
-            footer={<div className="px-2"><ThemeToggle size="sm" /></div>}
+            footer={
+              <div className="flex items-center gap-1 px-2">
+                <ThemeToggle size="sm" />
+                <BackgroundPicker value={bg} onChange={setBg} />
+              </div>
+            }
             items={[
               { key: 'home', label: 'Accueil', icon: Home, active: getActive() === 'home' },
               { key: 'new', label: 'Nouvelle Partie', icon: Gamepad2, active: getActive() === 'new' },
               { key: 'players', label: 'Joueurs', icon: Users, active: getActive() === 'players' },
             ]}
-            onItemClick={(item) => {
+            onNavigate={(key) => {
               const routes: Record<string, string> = { home: '/', new: '/games/new', players: '/players' }
-              navigate(routes[item.key] || '/')
+              navigate(routes[key] || '/')
             }}
           />
-          <SidebarInset>
+          <SidebarInset navbarHeight={0}>
             <header className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <SidebarTrigger />
             </header>

@@ -7,7 +7,6 @@ const BG_OPTIONS = [
   { key: 'waves', label: 'Vagues' },
   { key: 'aurora', label: 'Aurora' },
   { key: 'particles', label: 'Particules' },
-  { key: 'silk', label: 'Soie' },
   { key: 'squares', label: 'Carrés' },
   { key: 'threads', label: 'Fils' },
   { key: 'none', label: 'Aucun' },
