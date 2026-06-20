@@ -1,0 +1,207 @@
+import { useState, useCallback } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { Button } from '@btcv/ui/Button'
+import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
+import { PageTitle } from '@btcv/ui/Typography'
+import { Badge } from '@btcv/ui/Badge'
+import { ProgressBar } from '@btcv/ui/ProgressBar'
+import { Tabs } from '@btcv/ui/Tabs'
+import { Alert } from '@btcv/ui/Alert'
+import { toast } from '@btcv/ui/Toast'
+import { getGame, getPlayers, saveGame } from '../lib/storage'
+import { calculateRoundScore } from '../lib/scoring'
+import { BonusDetail, Game } from '../lib/types'
+import ScoreBoard from '../components/ScoreBoard'
+import RoundInput from '../components/RoundInput'
+import { AlertTriangle, ChevronRight, Square } from 'lucide-react'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+
+const COLORS = ['#E7BB1D', '#ef4444', '#3b82f6', '#22c55e', '#a855f7', '#f97316', '#06b6d4', '#ec4899']
+
+type RoundEntry = { bid: number; tricks: number; bonusDetails: BonusDetail[] }
+
+export default function GamePlay() {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const players = getPlayers()
+  const [game, setGame] = useState<Game | undefined>(() => getGame(id!))
+  const [activeTab, setActiveTab] = useState<string>('input')
+  const [roundEntries, setRoundEntries] = useState<Record<string, RoundEntry>>({})
+
+  if (!game) return <Alert variant="error" title="Partie introuvable">Vérifiez l'URL.</Alert>
+
+  if (game.status === 'completed') {
+    navigate(`/games/${game.id}/results`, { replace: true })
+    return null
+  }
+
+  const round = game.currentRound
+  const getName = (playerId: string) => players.find(p => p.id === playerId)?.name || '?'
+
+  const handlePlayerSubmit = useCallback((playerId: string, bid: number, tricks: number, bonusDetails: BonusDetail[]) => {
+    setRoundEntries(prev => ({ ...prev, [playerId]: { bid, tricks, bonusDetails } }))
+    toast.success(`${getName(playerId)} validé`)
+  }, [players])
+
+  const allSubmitted = game.players.every(gp => roundEntries[gp.playerId])
+
+  const finalizeRound = () => {
+    if (!allSubmitted) return
+
+    const updatedGame = { ...game, players: game.players.map(gp => {
+      const entry = roundEntries[gp.playerId]!
+      const roundScore = calculateRoundScore(round + 1, entry.bid, entry.tricks, entry.bonusDetails)
+      const rounds = [...gp.rounds, roundScore]
+      const totalScore = rounds.reduce((sum, r) => sum + r.score, 0)
+      return { ...gp, rounds, totalScore }
+    })}
+
+    const nextRound = round + 1
+    if (nextRound >= 10) {
+      updatedGame.status = 'completed'
+      updatedGame.completedAt = Date.now()
+    }
+    updatedGame.currentRound = nextRound
+
+    saveGame(updatedGame as Game)
+    setGame(updatedGame as Game)
+    setRoundEntries({})
+
+    if (nextRound >= 10) {
+      toast.success('Partie terminée !')
+      navigate(`/games/${game.id}/results`)
+    } else {
+      toast.info(`Manche ${nextRound + 1} !`)
+    }
+  }
+
+  const stopGame = () => {
+    if (round === 0) {
+      toast.error('Jouez au moins une manche avant d\'arrêter')
+      return
+    }
+    const updatedGame: Game = {
+      ...game,
+      status: 'completed',
+      completedAt: Date.now(),
+    }
+    saveGame(updatedGame)
+    toast.success('Partie terminée !')
+    navigate(`/games/${game.id}/results`)
+  }
+
+  const chartData = Array.from({ length: round }, (_, i) => {
+    const point: Record<string, number | string> = { round: `M${i + 1}` }
+    for (const gp of game.players) {
+      const cumulative = gp.rounds.slice(0, i + 1).reduce((s, r) => s + r.score, 0)
+      point[getName(gp.playerId)] = cumulative
+    }
+    return point
+  })
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <PageTitle>Manche {round + 1} / 10</PageTitle>
+        <div className="flex items-center gap-2">
+          <Badge variant="info" size="sm">{round + 1} carte{round + 1 > 1 ? 's' : ''} par joueur</Badge>
+          <Button variant="destructive" size="sm" onClick={stopGame}>
+            <Square className="w-3.5 h-3.5" /> Arrêter
+          </Button>
+        </div>
+      </div>
+
+      <ProgressBar value={(round / 10) * 100} variant="gold" size="md" />
+
+      {chartData.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle>Scores en temps réel</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={chartData}>
+                <XAxis dataKey="round" stroke="var(--muted-foreground)" fontSize={12} />
+                <YAxis stroke="var(--muted-foreground)" fontSize={12} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8 }}
+                  labelStyle={{ color: 'var(--foreground)' }}
+                />
+                <Legend />
+                {game.players.map((gp, i) => (
+                  <Line
+                    key={gp.playerId}
+                    type="monotone"
+                    dataKey={getName(gp.playerId)}
+                    stroke={COLORS[i % COLORS.length]}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      <Tabs
+        tabs={[
+          { key: 'input', label: 'Saisie' },
+          { key: 'scores', label: 'Tableau des scores' },
+        ]}
+        active={activeTab}
+        onChange={setActiveTab}
+      />
+
+      {activeTab === 'input' ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {game.players.map(gp => {
+              const entry = roundEntries[gp.playerId]
+              if (entry) {
+                const preview = calculateRoundScore(round + 1, entry.bid, entry.tricks, entry.bonusDetails)
+                return (
+                  <Card key={gp.playerId} className="border-success/30">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        {getName(gp.playerId)}
+                        <Badge variant="success" size="sm">
+                          {preview.score >= 0 ? '+' : ''}{preview.score} pts
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-muted-foreground">
+                      Annonce: {entry.bid} | Réalisé: {entry.tricks}
+                      {entry.bonusDetails.length > 0 && ` | Bonus: +${preview.bonus}`}
+                    </CardContent>
+                  </Card>
+                )
+              }
+              return (
+                <RoundInput
+                  key={gp.playerId}
+                  playerName={getName(gp.playerId)}
+                  roundNumber={round + 1}
+                  onSubmit={(bid, tricks, bonusDetails) => handlePlayerSubmit(gp.playerId, bid, tricks, bonusDetails)}
+                />
+              )
+            })}
+          </div>
+
+          {allSubmitted && (
+            <Button variant="primary" size="lg" className="w-full" onClick={finalizeRound}>
+              <ChevronRight className="w-4 h-4" />
+              {round + 1 >= 10 ? 'Terminer la partie' : `Passer à la manche ${round + 2}`}
+            </Button>
+          )}
+
+          {!allSubmitted && (
+            <Alert variant="warning" icon={AlertTriangle} title="En attente">
+              {game.players.filter(gp => !roundEntries[gp.playerId]).length} joueur(s) restant(s)
+            </Alert>
+          )}
+        </div>
+      ) : (
+        <ScoreBoard game={game} players={players} currentRound={round} />
+      )}
+    </div>
+  )
+}
