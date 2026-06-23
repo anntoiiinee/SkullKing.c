@@ -10,7 +10,6 @@ const BONUS_TYPES: BonusType[] = [
   'fourteen_black',
   'fourteen_color',
   'tigresse_pirate',
-  'butin',
 ]
 
 type Props = {

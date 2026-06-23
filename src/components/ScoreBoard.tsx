@@ -114,6 +114,7 @@ export default function ScoreBoard({ game, players, currentRound, onGameUpdate }
             <RoundInput
               playerName={getName(editing.playerId)}
               roundNumber={editing.roundIndex + 1}
+              otherPlayers={players.filter(p => p.id !== editing.playerId)}
               onSubmit={handleEditSubmit}
               defaultBid={editingRound.bid}
               defaultTricks={editingRound.tricks}

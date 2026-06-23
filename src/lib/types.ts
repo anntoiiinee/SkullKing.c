@@ -10,6 +10,7 @@ export type BonusType =
 export type BonusDetail = {
   type: BonusType
   count: number
+  linkedPlayerId?: string
 }
 
 export type RoundScore = {
