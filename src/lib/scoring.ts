@@ -41,14 +41,13 @@ export function resolveButinBonus(
     const playerSucceeded = entry.bid === entry.tricks
     const linkedSucceeded = linkedEntry.bid === linkedEntry.tricks
 
-    let butinValue = 0
     if (playerSucceeded && linkedSucceeded) {
-      butinValue = 20 * butin.count
+      adjustments[playerId] = (adjustments[playerId] || 0) + 20 * butin.count
     } else if (!playerSucceeded && !linkedSucceeded) {
-      butinValue = -20 * butin.count
+      const penalty = -20 * butin.count
+      adjustments[playerId] = (adjustments[playerId] || 0) + penalty
+      adjustments[butin.linkedPlayerId] = (adjustments[butin.linkedPlayerId] || 0) + penalty
     }
-
-    adjustments[playerId] = (adjustments[playerId] || 0) + butinValue
   }
 
   return adjustments
