@@ -200,7 +200,7 @@ export default function GamePlay() {
           )}
         </div>
       ) : (
-        <ScoreBoard game={game} players={players} currentRound={round} />
+        <ScoreBoard game={game} players={players} currentRound={round} onGameUpdate={setGame} />
       )}
     </div>
   )

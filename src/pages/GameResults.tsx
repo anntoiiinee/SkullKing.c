@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@btcv/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
@@ -5,6 +6,7 @@ import { PageTitle, PageDescription } from '@btcv/ui/Typography'
 import { Badge } from '@btcv/ui/Badge'
 import { Alert } from '@btcv/ui/Alert'
 import { getGame, getPlayers } from '../lib/storage'
+import { Game } from '../lib/types'
 import ScoreBoard from '../components/ScoreBoard'
 import { Home, Trophy } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
@@ -14,7 +16,7 @@ const COLORS = ['#E7BB1D', '#ef4444', '#3b82f6', '#22c55e', '#a855f7', '#f97316'
 export default function GameResults() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const game = getGame(id!)
+  const [game, setGame] = useState<Game | undefined>(() => getGame(id!))
   const players = getPlayers()
 
   if (!game) return <Alert variant="error" title="Partie introuvable" />
@@ -99,7 +101,7 @@ export default function GameResults() {
         </Card>
       )}
 
-      <ScoreBoard game={game} players={players} currentRound={game.players[0]?.rounds.length || 0} />
+      <ScoreBoard game={game} players={players} currentRound={game.players[0]?.rounds.length || 0} onGameUpdate={setGame} />
 
       <Button variant="outline" onClick={() => navigate('/')}>
         <Home className="w-4 h-4" /> Retour à l'accueil
