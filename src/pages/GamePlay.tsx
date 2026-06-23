@@ -9,7 +9,7 @@ import { Tabs } from '@btcv/ui/Tabs'
 import { Alert } from '@btcv/ui/Alert'
 import { toast } from '@btcv/ui/Toast'
 import { getGame, getPlayers, saveGame } from '../lib/storage'
-import { calculateRoundScore } from '../lib/scoring'
+import { calculateRoundScore, resolveButinBonus } from '../lib/scoring'
 import { BonusDetail, Game } from '../lib/types'
 import ScoreBoard from '../components/ScoreBoard'
 import RoundInput from '../components/RoundInput'
@@ -48,9 +48,16 @@ export default function GamePlay() {
   const finalizeRound = () => {
     if (!allSubmitted) return
 
+    const butinAdjustments = resolveButinBonus(roundEntries)
+
     const updatedGame = { ...game, players: game.players.map(gp => {
       const entry = roundEntries[gp.playerId]!
       const roundScore = calculateRoundScore(round + 1, entry.bid, entry.tricks, entry.bonusDetails)
+      const butinAdj = butinAdjustments[gp.playerId] || 0
+      if (butinAdj !== 0) {
+        roundScore.bonus += butinAdj
+        roundScore.score += butinAdj
+      }
       const rounds = [...gp.rounds, roundScore]
       const totalScore = rounds.reduce((sum, r) => sum + r.score, 0)
       return { ...gp, rounds, totalScore }
@@ -180,6 +187,7 @@ export default function GamePlay() {
                   key={gp.playerId}
                   playerName={getName(gp.playerId)}
                   roundNumber={round + 1}
+                  otherPlayers={players.filter(p => p.id !== gp.playerId)}
                   onSubmit={(bid, tricks, bonusDetails) => handlePlayerSubmit(gp.playerId, bid, tricks, bonusDetails)}
                 />
               )
