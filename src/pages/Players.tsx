@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@btcv/ui/Button'
 import { Input } from '@btcv/ui/Input'
@@ -8,15 +8,24 @@ import { toast } from '@btcv/ui/Toast'
 import { UserPlus, Trash2, ChevronRight, Trophy, Target, TrendingUp } from 'lucide-react'
 import { getPlayers, savePlayer, deletePlayer, getGames } from '../lib/storage'
 import { getPlayerStats } from '../lib/stats'
-import { Player } from '../lib/types'
+import { Player, Game } from '../lib/types'
 
 export default function Players() {
   const navigate = useNavigate()
-  const [players, setPlayers] = useState(getPlayers)
+  const [players, setPlayers] = useState<Player[]>([])
+  const [games, setGames] = useState<Game[]>([])
   const [newName, setNewName] = useState('')
-  const games = getGames()
+  const [loading, setLoading] = useState(true)
 
-  const addPlayer = () => {
+  useEffect(() => {
+    Promise.all([getPlayers(), getGames()]).then(([p, g]) => {
+      setPlayers(p)
+      setGames(g)
+      setLoading(false)
+    })
+  }, [])
+
+  const addPlayer = async () => {
     const name = newName.trim()
     if (!name) return
     if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
@@ -24,17 +33,19 @@ export default function Players() {
       return
     }
     const player: Player = { id: crypto.randomUUID(), name, createdAt: Date.now() }
-    savePlayer(player)
+    await savePlayer(player)
     setPlayers([...players, player])
     setNewName('')
     toast.success(`${name} ajouté`)
   }
 
-  const removePlayer = (id: string) => {
-    deletePlayer(id)
+  const removePlayer = async (id: string) => {
+    await deletePlayer(id)
     setPlayers(players.filter(p => p.id !== id))
     toast.info('Joueur supprimé')
   }
+
+  if (loading) return <div className="text-center py-12 text-muted-foreground">Chargement...</div>
 
   return (
     <div className="space-y-6">

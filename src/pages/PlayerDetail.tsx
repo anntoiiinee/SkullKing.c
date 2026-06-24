@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@btcv/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
@@ -7,6 +8,7 @@ import { Alert } from '@btcv/ui/Alert'
 import { Trophy, Target, TrendingUp, Award, Flame, ArrowLeft, BarChart3 } from 'lucide-react'
 import { getPlayers, getGames } from '../lib/storage'
 import { getPlayerStats } from '../lib/stats'
+import { Player, Game } from '../lib/types'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid,
@@ -15,10 +17,19 @@ import {
 export default function PlayerDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const players = getPlayers()
-  const player = players.find(p => p.id === id)
-  const games = getGames()
+  const [player, setPlayer] = useState<Player | undefined>()
+  const [games, setGames] = useState<Game[]>([])
+  const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    Promise.all([getPlayers(), getGames()]).then(([players, g]) => {
+      setPlayer(players.find(p => p.id === id))
+      setGames(g)
+      setLoading(false)
+    })
+  }, [id])
+
+  if (loading) return <div className="text-center py-12 text-muted-foreground">Chargement...</div>
   if (!player) return <Alert variant="error" title="Joueur introuvable" />
 
   const stats = getPlayerStats(player, games)
