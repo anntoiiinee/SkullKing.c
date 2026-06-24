@@ -5,10 +5,12 @@ export type BonusType =
   | 'fourteen_black'
   | 'fourteen_color'
   | 'tigresse_pirate'
+  | 'butin'
 
 export type BonusDetail = {
   type: BonusType
   count: number
+  linkedPlayerId?: string
 }
 
 export type RoundScore = {
@@ -47,4 +49,5 @@ export const BONUS_LABELS: Record<BonusType, { label: string; points: number }> 
   fourteen_black: { label: '14 Noir capturé', points: 20 },
   fourteen_color: { label: '14 Couleur capturé', points: 10 },
   tigresse_pirate: { label: 'Tigresse (mode pirate)', points: 20 },
+  butin: { label: 'Butin capturé', points: 20 },
 }

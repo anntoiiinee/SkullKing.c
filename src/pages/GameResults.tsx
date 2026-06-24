@@ -111,7 +111,7 @@ export default function GameResults() {
         </Card>
       )}
 
-      <ScoreBoard game={game} players={players} currentRound={game.players[0]?.rounds.length || 0} />
+      <ScoreBoard game={game} players={players} currentRound={game.players[0]?.rounds.length || 0} onGameUpdate={setGame} />
 
       <Button variant="outline" onClick={() => navigate('/')}>
         <Home className="w-4 h-4" /> Retour à l'accueil
