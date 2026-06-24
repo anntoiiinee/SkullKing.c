@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@btcv/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
@@ -6,11 +7,24 @@ import { PageTitle, PageDescription } from '@btcv/ui/Typography'
 import { Badge } from '@btcv/ui/Badge'
 import { Gamepad2, Users, Trophy, Clock, Play, Eye } from 'lucide-react'
 import { getGames, getPlayers } from '../lib/storage'
+import { Game, Player } from '../lib/types'
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const games = getGames()
-  const players = getPlayers()
+  const [games, setGames] = useState<Game[]>([])
+  const [players, setPlayers] = useState<Player[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([getGames(), getPlayers()]).then(([g, p]) => {
+      setGames(g)
+      setPlayers(p)
+      setLoading(false)
+    })
+  }, [])
+
+  if (loading) return <div className="text-center py-12 text-muted-foreground">Chargement...</div>
+
   const completedGames = games.filter(g => g.status === 'completed')
   const inProgressGames = games.filter(g => g.status === 'in_progress')
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@btcv/ui/Button'
 import { Input } from '@btcv/ui/Input'
@@ -12,9 +12,17 @@ import { Player, Game } from '../lib/types'
 
 export default function NewGame() {
   const navigate = useNavigate()
-  const [existingPlayers] = useState(getPlayers)
+  const [existingPlayers, setExistingPlayers] = useState<Player[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [newName, setNewName] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getPlayers().then(p => {
+      setExistingPlayers(p)
+      setLoading(false)
+    })
+  }, [])
 
   const togglePlayer = (id: string) => {
     setSelectedIds(prev =>
@@ -22,7 +30,7 @@ export default function NewGame() {
     )
   }
 
-  const addNewPlayer = () => {
+  const addNewPlayer = async () => {
     const name = newName.trim()
     if (!name) return
     if (existingPlayers.some(p => p.name.toLowerCase() === name.toLowerCase())) {
@@ -30,14 +38,14 @@ export default function NewGame() {
       return
     }
     const player: Player = { id: crypto.randomUUID(), name, createdAt: Date.now() }
-    savePlayer(player)
-    existingPlayers.push(player)
+    await savePlayer(player)
+    setExistingPlayers(prev => [...prev, player])
     setSelectedIds(prev => [...prev, player.id])
     setNewName('')
     toast.success(`${name} ajouté`)
   }
 
-  const startGame = () => {
+  const startGame = async () => {
     if (selectedIds.length < 2) {
       toast.error('Il faut au moins 2 joueurs')
       return
@@ -49,10 +57,12 @@ export default function NewGame() {
       status: 'in_progress',
       createdAt: Date.now(),
     }
-    saveGame(game)
+    await saveGame(game)
     toast.success('Partie créée !')
     navigate(`/games/${game.id}`)
   }
+
+  if (loading) return <div className="text-center py-12 text-muted-foreground">Chargement...</div>
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@btcv/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
@@ -6,7 +6,7 @@ import { PageTitle, PageDescription } from '@btcv/ui/Typography'
 import { Badge } from '@btcv/ui/Badge'
 import { Alert } from '@btcv/ui/Alert'
 import { getGame, getPlayers } from '../lib/storage'
-import { Game } from '../lib/types'
+import { Game, Player } from '../lib/types'
 import ScoreBoard from '../components/ScoreBoard'
 import { Home, Trophy } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
@@ -16,9 +16,19 @@ const COLORS = ['#E7BB1D', '#ef4444', '#3b82f6', '#22c55e', '#a855f7', '#f97316'
 export default function GameResults() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [game, setGame] = useState<Game | undefined>(() => getGame(id!))
-  const players = getPlayers()
+  const [game, setGame] = useState<Game | undefined>()
+  const [players, setPlayers] = useState<Player[]>([])
+  const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    Promise.all([getGame(id!), getPlayers()]).then(([g, p]) => {
+      setGame(g)
+      setPlayers(p)
+      setLoading(false)
+    })
+  }, [id])
+
+  if (loading) return <div className="text-center py-12 text-muted-foreground">Chargement...</div>
   if (!game) return <Alert variant="error" title="Partie introuvable" />
 
   const getName = (playerId: string) => players.find(p => p.id === playerId)?.name || '?'

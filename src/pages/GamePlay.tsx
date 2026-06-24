@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@btcv/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
@@ -10,7 +10,7 @@ import { Alert } from '@btcv/ui/Alert'
 import { toast } from '@btcv/ui/Toast'
 import { getGame, getPlayers, saveGame } from '../lib/storage'
 import { calculateRoundScore, resolveButinBonus } from '../lib/scoring'
-import { BonusDetail, Game } from '../lib/types'
+import { BonusDetail, Game, Player } from '../lib/types'
 import ScoreBoard from '../components/ScoreBoard'
 import RoundInput from '../components/RoundInput'
 import { AlertTriangle, ChevronRight, Square } from 'lucide-react'
@@ -23,11 +23,21 @@ type RoundEntry = { bid: number; tricks: number; bonusDetails: BonusDetail[] }
 export default function GamePlay() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const players = getPlayers()
-  const [game, setGame] = useState<Game | undefined>(() => getGame(id!))
+  const [players, setPlayers] = useState<Player[]>([])
+  const [game, setGame] = useState<Game | undefined>()
   const [activeTab, setActiveTab] = useState<string>('input')
   const [roundEntries, setRoundEntries] = useState<Record<string, RoundEntry>>({})
+  const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    Promise.all([getGame(id!), getPlayers()]).then(([g, p]) => {
+      setGame(g)
+      setPlayers(p)
+      setLoading(false)
+    })
+  }, [id])
+
+  if (loading) return <div className="text-center py-12 text-muted-foreground">Chargement...</div>
   if (!game) return <Alert variant="error" title="Partie introuvable">Vérifiez l'URL.</Alert>
 
   if (game.status === 'completed') {
@@ -38,14 +48,14 @@ export default function GamePlay() {
   const round = game.currentRound
   const getName = (playerId: string) => players.find(p => p.id === playerId)?.name || '?'
 
-  const handlePlayerSubmit = useCallback((playerId: string, bid: number, tricks: number, bonusDetails: BonusDetail[]) => {
+  const handlePlayerSubmit = (playerId: string, bid: number, tricks: number, bonusDetails: BonusDetail[]) => {
     setRoundEntries(prev => ({ ...prev, [playerId]: { bid, tricks, bonusDetails } }))
     toast.success(`${getName(playerId)} validé`)
-  }, [players])
+  }
 
   const allSubmitted = game.players.every(gp => roundEntries[gp.playerId])
 
-  const finalizeRound = () => {
+  const finalizeRound = async () => {
     if (!allSubmitted) return
 
     const butinAdjustments = resolveButinBonus(roundEntries)
@@ -70,7 +80,7 @@ export default function GamePlay() {
     }
     updatedGame.currentRound = nextRound
 
-    saveGame(updatedGame as Game)
+    await saveGame(updatedGame as Game)
     setGame(updatedGame as Game)
     setRoundEntries({})
 
@@ -82,7 +92,7 @@ export default function GamePlay() {
     }
   }
 
-  const stopGame = () => {
+  const stopGame = async () => {
     if (round === 0) {
       toast.error('Jouez au moins une manche avant d\'arrêter')
       return
@@ -92,7 +102,7 @@ export default function GamePlay() {
       status: 'completed',
       completedAt: Date.now(),
     }
-    saveGame(updatedGame)
+    await saveGame(updatedGame)
     toast.success('Partie terminée !')
     navigate(`/games/${game.id}/results`)
   }
