@@ -1,9 +1,12 @@
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { SidebarLayout, SidebarInset, EasySidebar, SidebarTrigger } from '@btcv/ui/Sidebar'
 import { ThemeToggle } from '@btcv/ui/DarkMode'
-import { Home, Users, Gamepad2 } from 'lucide-react'
+import { Home, Users, Gamepad2, LogOut } from 'lucide-react'
+import { Button } from '@btcv/ui/Button'
 import AnimatedBackground from './components/AnimatedBackground'
 import BackgroundPicker, { useBackground } from './components/BackgroundPicker'
+import { useAuth } from './lib/auth'
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import NewGame from './pages/NewGame'
 import GamePlay from './pages/GamePlay'
@@ -12,9 +15,18 @@ import Players from './pages/Players'
 import PlayerDetail from './pages/PlayerDetail'
 
 function App() {
+  const { user, loading, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [bg, setBg] = useBackground()
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">Chargement...</div>
+  }
+
+  if (!user) {
+    return <Login />
+  }
 
   const getActive = () => {
     if (location.pathname.startsWith('/games/new')) return 'new'
@@ -40,6 +52,9 @@ function App() {
               <div className="flex items-center gap-1 px-2">
                 <ThemeToggle size="sm" />
                 <BackgroundPicker value={bg} onChange={setBg} />
+                <Button variant="ghost" size="icon" onClick={signOut} title="Déconnexion">
+                  <LogOut className="w-4 h-4" />
+                </Button>
               </div>
             }
             items={[
@@ -55,6 +70,7 @@ function App() {
           <SidebarInset navbarHeight={0}>
             <header className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <SidebarTrigger />
+              <span className="ml-auto text-xs text-muted-foreground">{user.email}</span>
             </header>
             <main className="max-w-6xl mx-auto px-4 py-6">
               <Routes>
