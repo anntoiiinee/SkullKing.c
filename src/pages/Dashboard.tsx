@@ -5,8 +5,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
 import { StatWidget } from '@btcv/ui/Widget'
 import { PageTitle, PageDescription } from '@btcv/ui/Typography'
 import { Badge } from '@btcv/ui/Badge'
-import { Gamepad2, Users, Trophy, Clock, Play, Eye } from 'lucide-react'
-import { getGames, getPlayers } from '../lib/storage'
+import { toast } from '@btcv/ui/Toast'
+import { Gamepad2, Users, Trophy, Clock, Play, Eye, Trash2 } from 'lucide-react'
+import { getGames, getPlayers, deleteGame } from '../lib/storage'
 import { Game, Player } from '../lib/types'
 
 export default function Dashboard() {
@@ -22,6 +23,12 @@ export default function Dashboard() {
       setLoading(false)
     })
   }, [])
+
+  const handleDelete = async (gameId: string) => {
+    await deleteGame(gameId)
+    setGames(games.filter(g => g.id !== gameId))
+    toast.info('Partie supprimée')
+  }
 
   if (loading) return <div className="text-center py-12 text-muted-foreground">Chargement...</div>
 
@@ -60,9 +67,14 @@ export default function Dashboard() {
                   <span className="font-medium">{game.players.length} joueurs</span>
                   <Badge variant="warning" size="sm" className="ml-2">Manche {game.currentRound + 1}/10</Badge>
                 </div>
-                <Button variant="primary" size="sm" onClick={() => navigate(`/games/${game.id}`)}>
-                  <Play className="w-3.5 h-3.5" /> Reprendre
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button variant="primary" size="sm" onClick={() => navigate(`/games/${game.id}`)}>
+                    <Play className="w-3.5 h-3.5" /> Reprendre
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(game.id)}>
+                    <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
           </CardContent>
@@ -83,9 +95,14 @@ export default function Dashboard() {
                     <span className="ml-2 font-medium">🏆 {winnerName}</span>
                     <span className="ml-1 text-primary font-bold">{winner?.totalScore} pts</span>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => navigate(`/games/${game.id}/results`)}>
-                    <Eye className="w-3.5 h-3.5" /> Voir
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/games/${game.id}/results`)}>
+                      <Eye className="w-3.5 h-3.5" /> Voir
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(game.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               )
             })}

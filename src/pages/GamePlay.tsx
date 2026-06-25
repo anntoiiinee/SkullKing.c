@@ -13,7 +13,7 @@ import { calculateRoundScore, resolveButinBonus } from '../lib/scoring'
 import { BonusDetail, Game, Player } from '../lib/types'
 import ScoreBoard from '../components/ScoreBoard'
 import RoundInput from '../components/RoundInput'
-import { AlertTriangle, ChevronRight, Square } from 'lucide-react'
+import { ChevronRight, Square } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 const COLORS = ['#E7BB1D', '#ef4444', '#3b82f6', '#22c55e', '#a855f7', '#f97316', '#06b6d4', '#ec4899']
@@ -48,20 +48,20 @@ export default function GamePlay() {
   const round = game.currentRound
   const getName = (playerId: string) => players.find(p => p.id === playerId)?.name || '?'
 
-  const handlePlayerSubmit = (playerId: string, bid: number, tricks: number, bonusDetails: BonusDetail[]) => {
+  const handlePlayerChange = (playerId: string, bid: number, tricks: number, bonusDetails: BonusDetail[]) => {
     setRoundEntries(prev => ({ ...prev, [playerId]: { bid, tricks, bonusDetails } }))
-    toast.success(`${getName(playerId)} validé`)
   }
 
-  const allSubmitted = game.players.every(gp => roundEntries[gp.playerId])
-
   const finalizeRound = async () => {
-    if (!allSubmitted) return
+    const entries: Record<string, RoundEntry> = {}
+    for (const gp of game.players) {
+      entries[gp.playerId] = roundEntries[gp.playerId] || { bid: 0, tricks: 0, bonusDetails: [] }
+    }
 
-    const butinAdjustments = resolveButinBonus(roundEntries)
+    const butinAdjustments = resolveButinBonus(entries)
 
     const updatedGame = { ...game, players: game.players.map(gp => {
-      const entry = roundEntries[gp.playerId]!
+      const entry = entries[gp.playerId]
       const roundScore = calculateRoundScore(round + 1, entry.bid, entry.tricks, entry.bonusDetails)
       const butinAdj = butinAdjustments[gp.playerId] || 0
       if (butinAdj !== 0) {
@@ -171,51 +171,22 @@ export default function GamePlay() {
       {activeTab === 'input' ? (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {game.players.map(gp => {
-              const entry = roundEntries[gp.playerId]
-              if (entry) {
-                const preview = calculateRoundScore(round + 1, entry.bid, entry.tricks, entry.bonusDetails)
-                return (
-                  <Card key={gp.playerId} className="border-success/30">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        {getName(gp.playerId)}
-                        <Badge variant="success" size="sm">
-                          {preview.score >= 0 ? '+' : ''}{preview.score} pts
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm text-muted-foreground">
-                      Annonce: {entry.bid} | Réalisé: {entry.tricks}
-                      {entry.bonusDetails.length > 0 && ` | Bonus: +${preview.bonus}`}
-                    </CardContent>
-                  </Card>
-                )
-              }
-              return (
-                <RoundInput
-                  key={gp.playerId}
-                  playerName={getName(gp.playerId)}
-                  roundNumber={round + 1}
-                  otherPlayers={players.filter(p => p.id !== gp.playerId)}
-                  onSubmit={(bid, tricks, bonusDetails) => handlePlayerSubmit(gp.playerId, bid, tricks, bonusDetails)}
-                />
-              )
-            })}
+            {game.players.map(gp => (
+              <RoundInput
+                key={gp.playerId}
+                playerName={getName(gp.playerId)}
+                roundNumber={round + 1}
+                otherPlayers={players.filter(p => p.id !== gp.playerId)}
+                showSubmit={false}
+                onChange={(bid, tricks, bonusDetails) => handlePlayerChange(gp.playerId, bid, tricks, bonusDetails)}
+              />
+            ))}
           </div>
 
-          {allSubmitted && (
-            <Button variant="primary" size="lg" className="w-full" onClick={finalizeRound}>
-              <ChevronRight className="w-4 h-4" />
-              {round + 1 >= 10 ? 'Terminer la partie' : `Passer à la manche ${round + 2}`}
-            </Button>
-          )}
-
-          {!allSubmitted && (
-            <Alert variant="warning" icon={AlertTriangle} title="En attente">
-              {game.players.filter(gp => !roundEntries[gp.playerId]).length} joueur(s) restant(s)
-            </Alert>
-          )}
+          <Button variant="primary" size="lg" className="w-full" onClick={finalizeRound}>
+            <ChevronRight className="w-4 h-4" />
+            {round + 1 >= 10 ? 'Terminer la partie' : `Valider la manche ${round + 1}`}
+          </Button>
         </div>
       ) : (
         <ScoreBoard game={game} players={players} currentRound={round} onGameUpdate={setGame} />
