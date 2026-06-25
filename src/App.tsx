@@ -73,7 +73,7 @@ function App() {
           <SidebarInset navbarHeight={0}>
             <header className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <SidebarTrigger />
-              <span className="ml-auto text-xs text-muted-foreground">{isGuest ? 'Invité' : user?.email}</span>
+              <span className="ml-auto text-xs text-muted-foreground">{isGuest ? '👻 Invité' : user?.email}</span>
             </header>
             <main className="max-w-6xl mx-auto px-4 py-6">
               <Routes>

@@ -4,7 +4,6 @@ import { Input } from '@btcv/ui/Input'
 import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
 import { Alert } from '@btcv/ui/Alert'
 import { useAuth } from '../lib/auth'
-import { UserRound } from 'lucide-react'
 
 export default function Login() {
   const { signIn, signInAsGuest } = useAuth()
@@ -60,7 +59,7 @@ export default function Login() {
             <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">ou</span></div>
           </div>
           <Button variant="outline" className="w-full" onClick={signInAsGuest}>
-            <UserRound className="w-4 h-4" /> Mode invité
+            👻 Mode invité
           </Button>
           <p className="text-xs text-muted-foreground text-center mt-2">
             Les scores ne seront pas sauvegardés
