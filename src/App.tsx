@@ -44,7 +44,7 @@ function App() {
             navbarHeight={0}
             header={
               <div className="flex items-center gap-3 px-2">
-                <img src="/logo.png" alt="Skull King" className="w-8 h-8" />
+                <span className="text-2xl">☠️</span>
                 <span className="font-bold text-lg">SKULL <span className="text-primary">KING</span></span>
               </div>
             }

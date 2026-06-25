@@ -27,7 +27,7 @@ export default function Login() {
         <CardHeader>
           <CardTitle className="text-center">
             <div className="flex items-center justify-center gap-3 mb-2">
-              <img src="/logo.png" alt="Skull King" className="w-10 h-10" />
+              <span className="text-3xl">☠️</span>
               <span className="font-bold text-xl">SKULL <span className="text-primary">KING</span></span>
             </div>
             <p className="text-sm text-muted-foreground font-normal">Connectez-vous pour continuer</p>
