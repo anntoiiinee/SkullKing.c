@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@btcv/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
 import { Input } from '@btcv/ui/Input'
@@ -12,14 +12,16 @@ import { Minus, Plus, Sparkles, Gift } from 'lucide-react'
 type Props = {
   playerName: string
   roundNumber: number
-  onSubmit: (bid: number, tricks: number, bonusDetails: BonusDetail[]) => void
   otherPlayers?: Player[]
+  onChange?: (bid: number, tricks: number, bonusDetails: BonusDetail[]) => void
+  onSubmit?: (bid: number, tricks: number, bonusDetails: BonusDetail[]) => void
+  showSubmit?: boolean
   defaultBid?: number
   defaultTricks?: number
   defaultBonusDetails?: BonusDetail[]
 }
 
-export default function RoundInput({ playerName, roundNumber, onSubmit, otherPlayers, defaultBid, defaultTricks, defaultBonusDetails }: Props) {
+export default function RoundInput({ playerName, roundNumber, otherPlayers, onChange, onSubmit, showSubmit = true, defaultBid, defaultTricks, defaultBonusDetails }: Props) {
   const [bid, setBid] = useState(defaultBid?.toString() ?? '')
   const [tricks, setTricks] = useState(defaultTricks?.toString() ?? '')
   const [bonusDetails, setBonusDetails] = useState<BonusDetail[]>(defaultBonusDetails ?? [])
@@ -27,6 +29,10 @@ export default function RoundInput({ playerName, roundNumber, onSubmit, otherPla
   const bidNum = parseInt(bid) || 0
   const tricksNum = parseInt(tricks) || 0
   const preview = calculateRoundScore(roundNumber, bidNum, tricksNum, bonusDetails)
+
+  useEffect(() => {
+    onChange?.(bidNum, tricksNum, bonusDetails)
+  }, [bid, tricks, bonusDetails])
 
   const butinDetail = bonusDetails.find(d => d.type === 'butin')
   const butinCount = butinDetail?.count || 0
@@ -109,13 +115,15 @@ export default function RoundInput({ playerName, roundNumber, onSubmit, otherPla
           </Collapse>
         )}
 
-        <Button
-          variant="primary"
-          className="w-full"
-          onClick={() => onSubmit(bidNum, tricksNum, bonusDetails)}
-        >
-          Valider
-        </Button>
+        {showSubmit && onSubmit && (
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={() => onSubmit(bidNum, tricksNum, bonusDetails)}
+          >
+            Valider
+          </Button>
+        )}
       </CardContent>
     </Card>
   )

@@ -1,6 +1,11 @@
 import { Game, GamePlayer, Player, RoundScore } from './types'
 import { supabase } from './supabase'
 
+async function getUserId(): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser()
+  return user!.id
+}
+
 export async function getPlayers(): Promise<Player[]> {
   const { data } = await supabase
     .from('players')
@@ -14,10 +19,12 @@ export async function getPlayers(): Promise<Player[]> {
 }
 
 export async function savePlayer(player: Player): Promise<void> {
+  const userId = await getUserId()
   await supabase.from('players').upsert({
     id: player.id,
     name: player.name,
     created_at: new Date(player.createdAt).toISOString(),
+    user_id: userId,
   })
 }
 
@@ -120,12 +127,14 @@ export async function getGame(id: string): Promise<Game | undefined> {
 }
 
 export async function saveGame(game: Game): Promise<void> {
+  const userId = await getUserId()
   await supabase.from('games').upsert({
     id: game.id,
     current_round: game.currentRound,
     status: game.status,
     created_at: new Date(game.createdAt).toISOString(),
     completed_at: game.completedAt ? new Date(game.completedAt).toISOString() : null,
+    user_id: userId,
   })
 
   const playerIds = game.players.map(gp => gp.playerId)
