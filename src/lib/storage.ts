@@ -1,5 +1,9 @@
 import { Game, GamePlayer, Player, RoundScore } from './types'
 import { supabase } from './supabase'
+import * as guestStorage from './guest-storage'
+
+let _guestMode = false
+export function setGuestMode(v: boolean) { _guestMode = v }
 
 async function getUserId(): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser()
@@ -7,6 +11,7 @@ async function getUserId(): Promise<string> {
 }
 
 export async function getPlayers(): Promise<Player[]> {
+  if (_guestMode) return guestStorage.getPlayers()
   const { data } = await supabase
     .from('players')
     .select('*')
@@ -19,6 +24,7 @@ export async function getPlayers(): Promise<Player[]> {
 }
 
 export async function savePlayer(player: Player): Promise<void> {
+  if (_guestMode) return guestStorage.savePlayer(player)
   const userId = await getUserId()
   await supabase.from('players').upsert({
     id: player.id,
@@ -29,10 +35,12 @@ export async function savePlayer(player: Player): Promise<void> {
 }
 
 export async function deletePlayer(id: string): Promise<void> {
+  if (_guestMode) return guestStorage.deletePlayer(id)
   await supabase.from('players').delete().eq('id', id)
 }
 
 export async function getGames(): Promise<Game[]> {
+  if (_guestMode) return guestStorage.getGames()
   const { data: gamesData } = await supabase
     .from('games')
     .select('*')
@@ -83,6 +91,7 @@ export async function getGames(): Promise<Game[]> {
 }
 
 export async function getGame(id: string): Promise<Game | undefined> {
+  if (_guestMode) return guestStorage.getGame(id)
   const { data: g } = await supabase
     .from('games')
     .select('*')
@@ -127,6 +136,7 @@ export async function getGame(id: string): Promise<Game | undefined> {
 }
 
 export async function saveGame(game: Game): Promise<void> {
+  if (_guestMode) return guestStorage.saveGame(game)
   const userId = await getUserId()
   await supabase.from('games').upsert({
     id: game.id,
@@ -163,5 +173,6 @@ export async function saveGame(game: Game): Promise<void> {
 }
 
 export async function deleteGame(id: string): Promise<void> {
+  if (_guestMode) return guestStorage.deleteGame(id)
   await supabase.from('games').delete().eq('id', id)
 }

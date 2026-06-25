@@ -4,9 +4,10 @@ import { Input } from '@btcv/ui/Input'
 import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
 import { Alert } from '@btcv/ui/Alert'
 import { useAuth } from '../lib/auth'
+import { UserRound } from 'lucide-react'
 
 export default function Login() {
-  const { signIn } = useAuth()
+  const { signIn, signInAsGuest } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +55,16 @@ export default function Login() {
               {loading ? 'Connexion...' : 'Se connecter'}
             </Button>
           </form>
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">ou</span></div>
+          </div>
+          <Button variant="outline" className="w-full" onClick={signInAsGuest}>
+            <UserRound className="w-4 h-4" /> Mode invité
+          </Button>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Les scores ne seront pas sauvegardés
+          </p>
         </CardContent>
       </Card>
     </div>
