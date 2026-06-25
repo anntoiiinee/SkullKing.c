@@ -5,8 +5,10 @@ import { supabase } from './supabase'
 type AuthContext = {
   user: User | null
   session: Session | null
+  isGuest: boolean
   loading: boolean
   signIn: (email: string, password: string) => Promise<string | null>
+  signInAsGuest: () => void
   signOut: () => Promise<void>
 }
 
@@ -15,6 +17,7 @@ const AuthCtx = createContext<AuthContext>(null!)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
+  const [isGuest, setIsGuest] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -37,12 +40,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error?.message ?? null
   }
 
+  const signInAsGuest = () => {
+    setIsGuest(true)
+  }
+
   const signOut = async () => {
+    if (isGuest) {
+      setIsGuest(false)
+      return
+    }
     await supabase.auth.signOut()
   }
 
   return (
-    <AuthCtx.Provider value={{ user, session, loading, signIn, signOut }}>
+    <AuthCtx.Provider value={{ user, session, isGuest, loading, signIn, signInAsGuest, signOut }}>
       {children}
     </AuthCtx.Provider>
   )

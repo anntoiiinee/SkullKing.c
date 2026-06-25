@@ -1,11 +1,14 @@
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { SidebarLayout, SidebarInset, EasySidebar, SidebarTrigger } from '@btcv/ui/Sidebar'
 import { ThemeToggle } from '@btcv/ui/DarkMode'
-import { Home, Users, Gamepad2, LogOut } from 'lucide-react'
+import { useState } from 'react'
+import { Home, Users, Gamepad2, LogOut, KeyRound } from 'lucide-react'
 import { Button } from '@btcv/ui/Button'
 import AnimatedBackground from './components/AnimatedBackground'
 import BackgroundPicker, { useBackground } from './components/BackgroundPicker'
 import { useAuth } from './lib/auth'
+import { setGuestMode } from './lib/storage'
+import ChangePassword from './components/ChangePassword'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import NewGame from './pages/NewGame'
@@ -15,16 +18,19 @@ import Players from './pages/Players'
 import PlayerDetail from './pages/PlayerDetail'
 
 function App() {
-  const { user, loading, signOut } = useAuth()
+  const { user, isGuest, loading, signOut } = useAuth()
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const [bg, setBg] = useBackground()
+
+  setGuestMode(isGuest)
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground">Chargement...</div>
   }
 
-  if (!user) {
+  if (!user && !isGuest) {
     return <Login />
   }
 
@@ -52,6 +58,11 @@ function App() {
               <div className="flex items-center gap-1 px-2">
                 <ThemeToggle size="sm" />
                 <BackgroundPicker value={bg} onChange={setBg} />
+                {!isGuest && (
+                  <Button variant="ghost" size="icon" onClick={() => setShowChangePassword(true)} title="Changer le mot de passe">
+                    <KeyRound className="w-4 h-4" />
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={signOut} title="Déconnexion">
                   <LogOut className="w-4 h-4" />
                 </Button>
@@ -70,7 +81,7 @@ function App() {
           <SidebarInset navbarHeight={0}>
             <header className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <SidebarTrigger />
-              <span className="ml-auto text-xs text-muted-foreground">{user.email}</span>
+              <span className="ml-auto text-xs text-muted-foreground">{isGuest ? '👻 Invité' : user?.email}</span>
             </header>
             <main className="max-w-6xl mx-auto px-4 py-6">
               <Routes>
@@ -85,6 +96,7 @@ function App() {
           </SidebarInset>
         </SidebarLayout>
       </div>
+      {showChangePassword && <ChangePassword onClose={() => setShowChangePassword(false)} />}
     </div>
   )
 }
