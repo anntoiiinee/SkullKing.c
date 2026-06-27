@@ -2,7 +2,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { SidebarLayout, SidebarInset, EasySidebar, SidebarTrigger } from '@btcv/ui/Sidebar'
 import { ThemeToggle } from '@btcv/ui/DarkMode'
 import { useState } from 'react'
-import { Home, Users, Gamepad2, LogOut, KeyRound } from 'lucide-react'
+import { Home, Users, Gamepad2, LogOut, KeyRound, Skull, Ghost } from 'lucide-react'
 import { Button } from '@btcv/ui/Button'
 import AnimatedBackground from './components/AnimatedBackground'
 import BackgroundPicker, { useBackground } from './components/BackgroundPicker'
@@ -50,7 +50,7 @@ function App() {
             navbarHeight={0}
             header={
               <div className="flex items-center gap-3 px-2">
-                <span className="text-2xl">☠️</span>
+                <Skull className="w-7 h-7" />
                 <span className="font-bold text-lg">SKULL <span className="text-primary">KING</span></span>
               </div>
             }
@@ -81,7 +81,7 @@ function App() {
           <SidebarInset navbarHeight={0}>
             <header className="flex items-center gap-2 px-4 py-3 border-b border-border">
               <SidebarTrigger />
-              <span className="ml-auto text-xs text-muted-foreground">{isGuest ? '👻 Invité' : user?.email}</span>
+              <span className="ml-auto text-xs text-muted-foreground">{isGuest ? <><Ghost className="w-3.5 h-3.5 inline" /> Invité</> : user?.email}</span>
             </header>
             <main className="max-w-6xl mx-auto px-4 py-6">
               <Routes>

@@ -92,7 +92,7 @@ export default function Dashboard() {
                 <div key={game.id} className="flex items-center justify-between rounded-md bg-card/50 px-4 py-3">
                   <div>
                     <span className="text-sm text-muted-foreground">{new Date(game.completedAt || game.createdAt).toLocaleDateString('fr-FR')}</span>
-                    <span className="ml-2 font-medium">🏆 {winnerName}</span>
+                    <span className="ml-2 font-medium"><Trophy className="w-4 h-4 inline" /> {winnerName}</span>
                     <span className="ml-1 text-primary font-bold">{winner?.totalScore} pts</span>
                   </div>
                   <div className="flex items-center gap-1">
