@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
 import { calculateRoundScore } from '../lib/scoring'
 import { saveGame } from '../lib/storage'
 import { toast } from '@btcv/ui/Toast'
-import { Pencil } from 'lucide-react'
+import { Pencil, Crown } from 'lucide-react'
 import RoundInput from './RoundInput'
 
 type Props = {
@@ -72,7 +72,7 @@ export default function ScoreBoard({ game, players, currentRound, onGameUpdate }
             {sorted.map((gp, rank) => (
               <tr key={gp.playerId} className="border-b border-border/50">
                 <td className="py-2 px-2">
-                  {rank === 0 && currentRound > 0 ? '👑' : rank + 1}
+                  {rank === 0 && currentRound > 0 ? <Crown className="w-4 h-4 text-yellow-500" /> : rank + 1}
                 </td>
                 <td className="py-2 px-2 font-medium">{getName(gp.playerId)}</td>
                 {Array.from({ length: currentRound }, (_, i) => {

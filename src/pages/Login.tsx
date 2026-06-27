@@ -3,6 +3,7 @@ import { Button } from '@btcv/ui/Button'
 import { Input } from '@btcv/ui/Input'
 import { Card, CardHeader, CardTitle, CardContent } from '@btcv/ui/Card'
 import { Alert } from '@btcv/ui/Alert'
+import { Skull, Ghost } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 
 export default function Login() {
@@ -27,7 +28,7 @@ export default function Login() {
         <CardHeader>
           <CardTitle className="text-center">
             <div className="flex items-center justify-center gap-3 mb-2">
-              <span className="text-3xl">☠️</span>
+              <Skull className="w-8 h-8" />
               <span className="font-bold text-xl">SKULL <span className="text-primary">KING</span></span>
             </div>
             <p className="text-sm text-muted-foreground font-normal">Connectez-vous pour continuer</p>
@@ -59,7 +60,7 @@ export default function Login() {
             <div className="relative flex justify-center text-xs"><span className="bg-card px-2 text-muted-foreground">ou</span></div>
           </div>
           <Button variant="outline" className="w-full" onClick={signInAsGuest}>
-            👻 Mode invité
+            <Ghost className="w-4 h-4" /> Mode invité
           </Button>
           <p className="text-xs text-muted-foreground text-center mt-2">
             Les scores ne seront pas sauvegardés
